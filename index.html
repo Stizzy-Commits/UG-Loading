@@ -417,18 +417,15 @@
          artist — displayed under the title
          url    — path to the .mp3 file inside your music/ folder
 
-       Example entry:
-         { title: "Song Name", artist: "Artist Name", url: "music/filename.mp3" },
-
-       Tracks play in order and loop back to the top.
-       Remove or comment out any line to skip that track.
+       Tracks now play RANDOMLY instead of in order.
+       The same track will not play twice in a row unless there is only one track.
     ════════════════════════════════════════════════════════ */
     var playlist = [
-      { title: "KodyBlu31",  artist: "JID",          url: "music/JID-KodyBlu31.mp3"},
-      { title: "GRAILED",   artist: "1nonly",     url: "music/GRAILED.mp3"                   },
-      // { title: "Track 3 Title",   artist: "Artist Name",     url: "music/track3.mp3"                   },
-      // { title: "Track 4 Title",   artist: "Artist Name",     url: "music/track4.mp3"                   },
-      // { title: "Track 5 Title",   artist: "Artist Name",     url: "music/track5.mp3"                   },
+      { title: "KodyBlu31",  artist: "JID",      url: "music/JID-KodyBlu31.mp3" },
+      { title: "GRAILED",    artist: "1nonly",   url: "music/GRAILED.mp3" },
+      // { title: "Track 3 Title", artist: "Artist Name", url: "music/track3.mp3" },
+      // { title: "Track 4 Title", artist: "Artist Name", url: "music/track4.mp3" },
+      // { title: "Track 5 Title", artist: "Artist Name", url: "music/track5.mp3" },
     ];
     /* ════════════════════════════════════════════════════════ */
 
@@ -444,20 +441,43 @@
     var current = 0;
     var playing = false;
 
+    function getRandomTrackIndex() {
+      if (!playlist.length) return 0;
+      if (playlist.length === 1) return 0;
+
+      var next = current;
+
+      while (next === current) {
+        next = Math.floor(Math.random() * playlist.length);
+      }
+
+      return next;
+    }
+
     function loadTrack(idx) {
       if (!playlist.length) return;
+
       current = ((idx % playlist.length) + playlist.length) % playlist.length;
+
       var t = playlist[current];
+
       audio.src = t.url;
       trackName.textContent = t.title;
       trackHint.textContent = t.artist || 'Now Playing';
+
       audio.load();
+    }
+
+    function loadRandomTrack() {
+      loadTrack(getRandomTrackIndex());
     }
 
     function setPlaying(state) {
       playing = state;
+
       iconPlay.style.display  = state ? 'none' : '';
       iconPause.style.display = state ? ''     : 'none';
+
       waveform.classList.toggle('paused', !state);
     }
 
@@ -470,52 +490,91 @@
 
     function fadeIn() {
       if (fadeInterval) clearInterval(fadeInterval);
+
       audio.volume = 0;
+
       var steps    = 60;
       var stepTime = FADE_DURATION / steps;
       var stepVol  = TARGET_VOLUME / steps;
+
       fadeInterval = setInterval(function() {
         var next = Math.min(audio.volume + stepVol, TARGET_VOLUME);
+
         audio.volume = next;
         volSlider.value = next;
-        if (next >= TARGET_VOLUME) clearInterval(fadeInterval);
+
+        if (next >= TARGET_VOLUME) {
+          clearInterval(fadeInterval);
+        }
       }, stepTime);
     }
 
     function play() {
       if (!playlist.length) return;
-      audio.play().then(function() { setPlaying(true); fadeIn(); }).catch(function() {});
+
+      audio.play()
+        .then(function() {
+          setPlaying(true);
+          fadeIn();
+        })
+        .catch(function() {});
     }
 
     function pause() {
       if (fadeInterval) clearInterval(fadeInterval);
+
       audio.pause();
       setPlaying(false);
     }
 
-    btnPlay.addEventListener('click', function() { playing ? pause() : play(); });
+    btnPlay.addEventListener('click', function() {
+      playing ? pause() : play();
+    });
 
     document.getElementById('btn-prev').addEventListener('click', function() {
-      if (playlist.length === 1) { audio.currentTime = 0; play(); return; }
-      loadTrack(current - 1); play();
+      if (playlist.length === 1) {
+        audio.currentTime = 0;
+        play();
+        return;
+      }
+
+      loadRandomTrack();
+      play();
     });
 
     document.getElementById('btn-next').addEventListener('click', function() {
-      if (playlist.length === 1) { audio.currentTime = 0; play(); return; }
-      loadTrack(current + 1); play();
+      if (playlist.length === 1) {
+        audio.currentTime = 0;
+        play();
+        return;
+      }
+
+      loadRandomTrack();
+      play();
     });
 
     audio.addEventListener('ended', function() {
-      if (playlist.length === 1) { audio.currentTime = 0; play(); return; }
-      loadTrack(current + 1); play();
+      if (playlist.length === 1) {
+        audio.currentTime = 0;
+        play();
+        return;
+      }
+
+      loadRandomTrack();
+      play();
     });
 
     volSlider.addEventListener('input', function() {
-      audio.volume = parseFloat(this.value);
+      TARGET_VOLUME = parseFloat(this.value);
+      audio.volume = TARGET_VOLUME;
     });
 
     audio.volume = parseFloat(volSlider.value);
-    loadTrack(0);
+
+    if (playlist.length > 0) {
+      current = Math.floor(Math.random() * playlist.length);
+      loadTrack(current);
+    }
 
     audio.addEventListener('canplaythrough', function handler() {
       audio.removeEventListener('canplaythrough', handler);
@@ -533,7 +592,10 @@
     window.GameDetails = function(serverName, serverURL, mapName, maxPlayers, steamID, gamemode, volume, language) {
       document.getElementById('map-name').textContent    = mapName    || '—';
       document.getElementById('max-players').textContent = maxPlayers ? maxPlayers + ' slots' : '—';
-      if (gamemode) document.getElementById('gamemode').textContent = gamemode;
+
+      if (gamemode) {
+        document.getElementById('gamemode').textContent = gamemode;
+      }
     };
 
     window.SetStatusChanged = function(status) {
@@ -542,8 +604,12 @@
 
     window.DownloadingFile = function(fileName) {
       var parts = fileName.split('/');
+
       document.getElementById('status').textContent = 'Downloading ' + parts[parts.length - 1];
-      if (totalFiles > 0) setBar(((totalFiles - neededFiles) / totalFiles) * 100);
+
+      if (totalFiles > 0) {
+        setBar(((totalFiles - neededFiles) / totalFiles) * 100);
+      }
     };
 
     window.SetFilesTotal = function(total) {
@@ -552,19 +618,33 @@
 
     window.SetFilesNeeded = function(needed) {
       neededFiles = needed;
+
       if (totalFiles > 0) {
         var done = totalFiles - needed;
+
         setBar((done / totalFiles) * 100);
+
         document.getElementById('file-count').textContent = needed > 0 ? done + ' / ' + totalFiles : '';
-        if (needed === 0) setBar(100);
+
+        if (needed === 0) {
+          setBar(100);
+        }
       }
     };
 
     var fakePct = 0;
+
     var fakeTimer = setInterval(function() {
       fakePct += Math.random() * 2.5;
-      if (fakePct >= 75) { clearInterval(fakeTimer); return; }
-      if (totalFiles === 0) setBar(fakePct);
+
+      if (fakePct >= 75) {
+        clearInterval(fakeTimer);
+        return;
+      }
+
+      if (totalFiles === 0) {
+        setBar(fakePct);
+      }
     }, 350);
   </script>
 
