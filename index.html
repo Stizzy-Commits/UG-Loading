@@ -72,28 +72,27 @@
       padding: 0 20px;
     }
 
-    /* ── Main title ── */
-    .server-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(48px, 10vw, 130px);
-      line-height: 0.92;
-      letter-spacing: 0.04em;
-      color: var(--white);
-      text-transform: uppercase;
+    /* ── Server logo ── */
+    .logo-frame {
+      width: clamp(300px, 54vmin, 720px);
+      aspect-ratio: 1.466;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
       opacity: 0;
       animation: up 1s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
-      /* Subtle text shadow for depth */
-      text-shadow:
-        0 0 80px rgba(255,255,255,0.08),
-        0 2px 0px rgba(255,255,255,0.05);
+      filter:
+        drop-shadow(0 0 70px rgba(30,112,226,0.16))
+        drop-shadow(0 16px 28px rgba(0,0,0,0.55));
     }
 
-    /* The word REVIVAL in a slightly different weight/color for emphasis */
-    .server-title .revival {
+    .server-logo {
+      width: 100%;
+      height: auto;
       display: block;
-      color: var(--white);
-      /* Thin outline style for contrast */
-      -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+      user-select: none;
+      pointer-events: none;
     }
 
     .tagline {
@@ -194,9 +193,9 @@
 <body>
 
   <div class="center">
-    <h1 class="server-title">
-      OldSchool<span class="revival">RP</span>
-    </h1>
+    <div class="logo-frame" aria-label="OldSchool RP">
+      <img class="server-logo" src="imgs/logo.png" alt="OldSchool RP">
+    </div>
     <p class="tagline">everyone's welcome</p>
     <div class="rule"></div>
     <div class="status-block">
